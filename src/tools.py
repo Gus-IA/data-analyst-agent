@@ -20,11 +20,9 @@ def describe_dataset(data_file: str) -> str:
     return "\n".join(lines)[:6000]
 
 
-def run_python(code: str, data_file: str) -> str:
-    """Run code in the sandbox. The CSV is at /data/data.csv; save charts in /out."""
-    result = run_code(code, data_file)
-    status = "OK" if result["ok"] else "ERROR"
-    parts = [f"Status: {status}"]
+def format_result(result: dict) -> str:
+    """Turn a sandbox result into text the model can read."""
+    parts = [f"Status: {'OK' if result['ok'] else 'ERROR'}"]
     if result["stdout"]:
         parts.append("Output:\n" + result["stdout"])
     if result["stderr"]:
@@ -32,6 +30,11 @@ def run_python(code: str, data_file: str) -> str:
     if result["files"]:
         parts.append("Files created in /out: " + ", ".join(result["files"]))
     return "\n".join(parts)
+
+
+def run_python(code: str, data_file: str) -> str:
+    """Run code in the sandbox. The CSV is at /data/data.csv; save charts in /out."""
+    return format_result(run_code(code, data_file))
 
 
 if __name__ == "__main__":
