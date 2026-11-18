@@ -27,6 +27,10 @@ SYSTEM_PROMPT = (
     "there is no internet, and charts must be saved as PNG files under /out. "
     "Use print() to show results. If the code fails, read the error and fix it. "
     "Finish with a short summary of the findings, based only on the outputs you saw."
+    "When comparing variables measured on different scales, standardize them first "
+    "(for example, difference of means divided by the pooled standard deviation) "
+    "and say which method you used. "
+    "Write tables in valid markdown, with each row on its own line."
 )
 
 MAX_TOOL_RETRIES = 2
@@ -91,25 +95,23 @@ def build_agent(data_file: str):
     return graph.compile(), runs
 
 
-def ask(agent, question: str, max_steps: int = 12) -> str:
-    """Run the agent with a hard limit on steps (each node execution counts as one)."""
+def ask(agent, question: str, max_steps: int = 12):
+    """Run the agent with a hard limit on steps. Returns (answer, messages)."""
     try:
         state = agent.invoke(
             {"messages": [("user", question)]},
             config={"recursion_limit": max_steps},
         )
-        return state["messages"][-1].content
+        messages = state["messages"]
+        return messages[-1].content, messages
     except GraphRecursionError:
-        return "Stopped: the agent reached the maximum number of steps."
+        return "Stopped: the agent reached the maximum number of steps.", []
 
 
 if __name__ == "__main__":
     csv = str(Path(__file__).resolve().parent.parent / "data" / "sample.csv")
     agent, runs = build_agent(csv)
-    answer = ask(
-        agent,
-        "How many rows are pulsars (class = 1)? Plot the distribution of Profile_mean by class.",
-    )
+    answer, _ = ask(...)
     print(answer)
     print("\nSandbox runs:", len(runs))
     for r in runs:
